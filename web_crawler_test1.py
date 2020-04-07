@@ -4,7 +4,7 @@ import bs4
 import csv
 import random,time
 url_A ='https://www.104.com.tw/jobs/search/?ro=0&kwop=7&keyword=SAP&order=15&asc=0&page='
-url_B = '&mode=s&jobsource=2018indexpoc'
+url_B = '&mode=s'#&jobsource=2018indexpoc'
 
 all_job_datas=[]
 for page in range(1,50+1):
@@ -12,8 +12,9 @@ for page in range(1,50+1):
     print(url)
     htmlFile = requests.get(url)
     ObjSoup=bs4.BeautifulSoup(htmlFile.text,'lxml')
+    
     jobs = ObjSoup.find_all('article',class_='js-job-item')                 #搜尋所有職缺  
-       
+    
     for job in jobs:
         job_name=job.find('a',class_="js-job-link").text                    #職缺內容
         job_company=job.get('data-cust-name')                               #公司名稱
