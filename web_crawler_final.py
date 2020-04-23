@@ -13,19 +13,20 @@ import csv
 import random, time
 start_page = 1
 num_of_pages = 50
+keyword104 = 'SAP'
 head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
         'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
 my_params = {'ro':'0', # 限定全職的工作，如果不限定則輸入0
-             'keyword':'SAP', # 想要查詢的關鍵字
+             'keyword':keyword104, # 想要查詢的關鍵字
              #'area':'6001001000', # 限定在台北的工作
              #'isnew':'90', # 只要最近三個月有更新的過的職缺
              #'jobsource' : '2018indexpoc'
              'mode':'s',
              'kwop': '7',
              'order':'15'} 
-fn=f'104人力銀行_SAP_positions.csv'  
+fn=f'104人力銀行_{keyword104}_positions.csv'  
 url = 'https://www.104.com.tw/jobs/search/?'
-companies_out = '104人力銀行_SAP_companies.csv'
+companies_out = f'104人力銀行_{keyword104}_companies.csv'
 company_url = 'https://www.104.com.tw/cust/list/index?'
 companies_columns=[
     '公司名稱',
@@ -81,14 +82,14 @@ def get_job_data(job):
 import os.path
 def save_to_csv(file_name, col_name, all_data):
     write_headers = True
-    if os.path.isfile(fn):
+    if os.path.isfile(file_name):
         write_headers = False
     #try:
     with open(file_name,'a+', newline='') as csvFile:               #定義CSV的寫入檔,並且每次寫入完會換下一行
         dictWriter = csv.DictWriter(csvFile, fieldnames=col_name)            #定義寫入器
         if write_headers:
             dictWriter.writeheader()
-            print(f"write headers to {fn}.")   
+            print(f"write headers to {file_name}.")   
         for dat in all_data:
             try:
                 dictWriter.writerow(dat)
