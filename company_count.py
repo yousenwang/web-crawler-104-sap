@@ -1,3 +1,10 @@
+"""
+Author: You Sen Wang (Ethan)
+Started Date: 04/06/2020
+Email: yousenwang@gmail.com
+Please read the README.md before using it.
+"""
+
 #%%
 import pandas as pd
 import numpy as np
@@ -5,7 +12,7 @@ from collections import Counter, OrderedDict
 
 #%%
 #source = './104人力銀行SAP.csv'
-source = './104人力銀行SAP0422.csv'
+source = './104人力銀行_SAP_positions_utf8.csv'
 pd_data = pd.read_csv(source, encoding = 'utf-8')
 n = pd_data.shape[0]
 counter = Counter(pd_data["公司名稱"])
