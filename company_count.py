@@ -4,7 +4,8 @@ import numpy as np
 from collections import Counter, OrderedDict
 
 #%%
-source = './104人力銀行SAP.csv'
+#source = './104人力銀行SAP.csv'
+source = './104人力銀行SAP0422.csv'
 pd_data = pd.read_csv(source, encoding = 'utf-8')
 n = pd_data.shape[0]
 counter = Counter(pd_data["公司名稱"])
@@ -19,7 +20,9 @@ col_names = ["name", "count"]
 dat = np.transpose(np.array([companies, companies_count]))
 df = pd.DataFrame(dat, columns=col_names)
 print(df.head(5))
-path = './companies_name_and_count.csv'
+import datetime
+time_produced = datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+path = f'./companies_name_and_count_{time_produced}.csv'
 try:
     df.to_csv(path, encoding='big5', index=False)
 except UnicodeEncodeError:
@@ -35,8 +38,6 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei'] 
 plt.rcParams['axes.unicode_minus'] = False
-import datetime
-time_produced = datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
 plt.figure(figsize=(19.2 * 1, 10.8 / 1.3 * 4))
 #plt.yscale('log', nonposy='clip')
 #plt.tight_layout()
