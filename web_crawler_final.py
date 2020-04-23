@@ -108,17 +108,24 @@ for page in range(start_page, num_of_pages+1):
 
     soup = bs(res.text, 'html.parser')
     jobs = soup.find_all('article',class_='js-job-item')
+
     for job in jobs:
+        print("-" *100)
         job_data = get_job_data(job)
         company_name = job_data['公司名稱']
-        all_job_data.append(job_data)
-        print(f"{fn} will append: {job_data['職缺內容']}")
 
+        print(company_name)
+        print([job_dat['公司名稱'] for job_dat in all_job_data])
+        print([job_dat['公司名稱'] == company_name for job_dat in all_job_data])
+        print(any([job_dat['公司名稱'] == company_name for job_dat in all_job_data]))
         # Check to see if we already search the company before.
-        if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data[:-1]):
+        if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data):
             print(f"{company_name} already exists, skip.")
             continue
-
+        all_job_data.append(job_data)
+        print(f"{fn} will append: {job_data['職缺內容']}")
+  
+        print("go")
         company_param = {
             "keyword": str(company_name),
             'mode':'s'
@@ -128,12 +135,10 @@ for page in range(start_page, num_of_pages+1):
         #print(comp_soup.body.prettify())
         companies = comp_soup.body.find_all('article', class_='items')
         for company in companies:
-            if company_name != company.h1.a.text:
-                #print(f"{company_name} != {company.h1.a.text}")
-                break
-            company_data = get_company_data(company)
-        all_comp_data.append(company_data) 
-        print(f"{companies_out} will append: {company_data['公司名稱']}")
+            if company_name == company.h1.a.text:
+                company_data = get_company_data(company)
+                all_comp_data.append(company_data) 
+                print(f"{companies_out} will append: {company_data['公司名稱']}")
     
     time.sleep(random.randint(1,3))
 save_to_csv(fn, jobs_columns, all_job_data)
