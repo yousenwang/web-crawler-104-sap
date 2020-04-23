@@ -113,19 +113,12 @@ for page in range(start_page, num_of_pages+1):
         print("-" *100)
         job_data = get_job_data(job)
         company_name = job_data['公司名稱']
-
-        print(company_name)
-        print([job_dat['公司名稱'] for job_dat in all_job_data])
-        print([job_dat['公司名稱'] == company_name for job_dat in all_job_data])
-        print(any([job_dat['公司名稱'] == company_name for job_dat in all_job_data]))
         # Check to see if we already search the company before.
         if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data):
             print(f"{company_name} already exists, skip.")
             continue
         all_job_data.append(job_data)
         print(f"{fn} will append: {job_data['職缺內容']}")
-  
-        print("go")
         company_param = {
             "keyword": str(company_name),
             'mode':'s'
