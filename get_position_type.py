@@ -17,8 +17,8 @@ import random, time
 start_page = 1
 num_of_pages = 1
 keyword104 = 'SAP'
-#head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-#        'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
+head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
+       'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
 my_params = {'ro':'0', # 限定全職的工作，如果不限定則輸入0
              'keyword':keyword104, # 想要查詢的關鍵字
              #'area':'6001001000', # 限定在台北的工作
@@ -27,9 +27,9 @@ my_params = {'ro':'0', # 限定全職的工作，如果不限定則輸入0
              'mode':'s',
              'kwop': '7',
              'order':'15'} 
-fn=f'104人力銀行_{keyword104}_positions.csv'  
+fn=f'104人力銀行_{keyword104}_positions_test1.csv'  
 url = 'https://www.104.com.tw/jobs/search/?'
-companies_out = f'104人力銀行_{keyword104}_companies.csv'
+companies_out = f'104人力銀行_{keyword104}_companies_test1.csv'
 company_url = 'https://www.104.com.tw/cust/list/index?'
 companies_columns=[
     '公司名稱',
@@ -60,26 +60,42 @@ jobs_columns=[
     '地址',
     '薪資',
     '網址',
-    '抓取時間'
+    '抓取時間',
+    '需求人數',
+    '職務類別1',
+    '職務類別2',
+    '職務類別3'
     ]
 
 def get_job_data(job):
+    job_urls = job.find_all('a')
+    job_url = 'https:' + job_urls[0].get("href")
+    print(job_url)
+    print("URL!")
+
+    client_response = Client(job_url)
+    html_source = client_response.mainFrame().toHtml()
+    comp_soup = bs(html_source, 'html.parser')
+    del client_response
     job_fetch_time = str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    job_name=job.find('a',class_="js-job-link").text
-    job_company=job.get('data-cust-name')
-    job_loc=job.find('ul', class_='job-list-intro').find('li').text
-    job_pay=job.find('span',class_='b-tag--default').text               #薪資
-    urls = job.find_all('a')
-    job_url = 'https:' + urls[0].get("href")
-    #company104_url = 'https:' + urls[1].get("href")
+    job_header = comp_soup.body.find('div', class_="job-header__title")
+    job_name = job_header.h1.get('title')
+    job_company = job_header.div.a.get('title')
+    job_type=[type_i.text for type_i in comp_soup.body.find_all('div', class_='trigger')]
+    job_info = [row for row in comp_soup.find_all('div', class_="col p-0 job-description-table__data")]
+    get_info = lambda row : row.find('p', class_="t3 mb-0").text.strip(" ")
     job_data = {
-        '職缺內容':job_name,
-        '公司名稱':job_company,
-        '地址':job_loc,
-        '薪資':job_pay,
-        '網址':job_url,
-        '抓取時間': job_fetch_time
+        '職缺內容': job_name,
+        '公司名稱': job_company,
+        '地址' : get_info(job_info[3]),
+        '需求人數' : get_info(job_info[9]),
+        '職務類別1': job_type[0],
+        '職務類別2': job_type[1],
+        '職務類別3': job_type[2],
+        '抓取時間': job_fetch_time,
+        '網址': job_url
     }
+    print(job_data)
     return job_data
 
 import os.path
@@ -133,65 +149,27 @@ for page in range(start_page, num_of_pages+1):
             continue
         all_job_data.append(job_data)
         print(f"{fn} will append: {job_data['職缺內容']}")
-        job_urls = job.find_all('a')
-        job_url = 'https:' + job_urls[0].get("href")
-        print(job_url)
-        print("URL!")
-        company_req = requests.get(job_url)#, headers=head)
 
-        client_response = Client(job_url)
-        html_source = client_response.mainFrame().toHtml()
-        comp_soup = bs(html_source, 'html.parser')
-        del client_response
-        job_fetch_time = str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-        job_header = comp_soup.body.find('div', class_="job-header__title")
-        job_name = job_header.h1.get('title')
-        job_company = job_header.div.a.get('title')
-        job_type=[type_i.text for type_i in comp_soup.body.find_all('div', class_='trigger')]
-        job_info = [row for row in comp_soup.find_all('div', class_="col p-0 job-description-table__data")]
-        get_info = lambda row : row.find('p', class_="t3 mb-0").text.strip(" ")
-        job_data = {
-            '職缺內容': job_name,
-            '公司名稱': job_company,
-            '工作性質': get_info(job_info[2]),
-            '地址' : get_info(job_info[3]),
-            '管理責任' : get_info(job_info[4]),
-            '出差外派' : get_info(job_info[5]),
-            '工作性質' : get_info(job_info[6]),
-            '休假制度' : get_info(job_info[7]),
-            '可上班日' : get_info(job_info[8]),
-            '需求人數' : get_info(job_info[9]),
-            '職務類別1': job_type[0],
-            '職務類別2': job_type[1],
-            '職務類別3': job_type[2],
-            '抓取時間': job_fetch_time,
-            '網址': job_url
-        }
-        print(job_data)
-
-        break
-        #comp_soup = bs(company_req.text, 'html.parser')
-        # print(comp_soup.body.prettify())
-        # company_param = {
-        #     "keyword": str(company_name),
-        #     'mode':'s'
-        #     }
-        # company_req =  requests.get(company_url, company_param, headers=head)
-        # comp_soup = bs(company_req.text, 'html.parser')
-        # #print(comp_soup.body.prettify())
-        # companies = comp_soup.body.find_all('article', class_='items')
-        # for company in companies:
-        #     if company_name == company.h1.a.text:
-        #         company_data = get_company_data(company)
-        #         all_comp_data.append(company_data) 
-        #         print(f"{companies_out} will append: {company_data['公司名稱']}")
+        company_param = {
+            "keyword": str(company_name),
+            'mode':'s'
+            }
+        company_req =  requests.get(company_url, company_param, headers=head)
+        comp_soup = bs(company_req.text, 'html.parser')
+        #print(comp_soup.body.prettify())
+        companies = comp_soup.body.find_all('article', class_='items')
+        for company in companies:
+            if company_name == company.h1.a.text:
+                company_data = get_company_data(company)
+                all_comp_data.append(company_data) 
+                print(f"{companies_out} will append: {company_data['公司名稱']}")
     
     time.sleep(random.randint(1,3))
-#save_to_csv(fn, jobs_columns, all_job_data)
-#save_to_csv(companies_out, companies_columns, all_comp_data)
+save_to_csv(fn, jobs_columns, all_job_data)
+save_to_csv(companies_out, companies_columns, all_comp_data)
 
-#print(f"num_jobs: {len(all_job_data)}")
-#print(f"num_companies: {len(all_comp_data)}")
+print(f"num_jobs: {len(all_job_data)}")
+print(f"num_companies: {len(all_comp_data)}")
 
 
 
