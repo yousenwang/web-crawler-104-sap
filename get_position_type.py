@@ -4,7 +4,10 @@ Started Date: 04/06/2020
 Email: yousenwang@gmail.com
 Please read the README.md before using it.
 """
-
+import sys
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QUrl
+from PyQt5.QtWebKitWidgets import QWebPage
 import requests
 import bs4
 from bs4 import BeautifulSoup as bs
@@ -12,10 +15,10 @@ import datetime
 import csv
 import random, time
 start_page = 1
-num_of_pages = 50
+num_of_pages = 1
 keyword104 = 'SAP'
-head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-        'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
+#head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
+#        'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
 my_params = {'ro':'0', # 限定全職的工作，如果不限定則輸入0
              'keyword':keyword104, # 想要查詢的關鍵字
              #'area':'6001001000', # 限定在台北的工作
@@ -99,12 +102,23 @@ def save_to_csv(file_name, col_name, all_data):
                 pass
     csvFile.close()
     print(f"New rows/data are written in {file_name}.")
+
+class Client(QWebPage):
+    def __init__(self, url):
+        self.app = QApplication(sys.argv)
+        QWebPage.__init__(self)
+        self.loadFinished.connect(self.on_page_load)
+        self.mainFrame().load(QUrl(url))
+        self.app.exec_()
+    def on_page_load(self):
+        self.app.quit()
+
 all_job_data = []
 all_comp_data = []
 for page in range(start_page, num_of_pages+1):
     print(("*" * 20) + f"page: {page}" + ("*" * 20))
     my_params['page'] = str(page)
-    res = requests.get(url, my_params, headers=head)
+    res = requests.get(url, my_params)#, headers=head)
 
     soup = bs(res.text, 'html.parser')
     jobs = soup.find_all('article',class_='js-job-item')
@@ -119,26 +133,38 @@ for page in range(start_page, num_of_pages+1):
             continue
         all_job_data.append(job_data)
         print(f"{fn} will append: {job_data['職缺內容']}")
-        company_param = {
-            "keyword": str(company_name),
-            'mode':'s'
-            }
-        company_req =  requests.get(company_url, company_param, headers=head)
-        comp_soup = bs(company_req.text, 'html.parser')
-        #print(comp_soup.body.prettify())
-        companies = comp_soup.body.find_all('article', class_='items')
-        for company in companies:
-            if company_name == company.h1.a.text:
-                company_data = get_company_data(company)
-                all_comp_data.append(company_data) 
-                print(f"{companies_out} will append: {company_data['公司名稱']}")
+        job_urls = job.find_all('a')
+        job_url = 'https:' + job_urls[0].get("href")
+        print(job_url)
+        print("URL!")
+        company_req = requests.get(job_url)#, headers=head)
+
+        client_response = Client(job_url)
+        html_source = client_response.mainFrame().toHtml()
+        comp_soup = bs(html_source, 'html.parser')
+        del client_response
+        #comp_soup = bs(company_req.text, 'html.parser')
+        # print(comp_soup.body.prettify())
+        # company_param = {
+        #     "keyword": str(company_name),
+        #     'mode':'s'
+        #     }
+        # company_req =  requests.get(company_url, company_param, headers=head)
+        # comp_soup = bs(company_req.text, 'html.parser')
+        # #print(comp_soup.body.prettify())
+        # companies = comp_soup.body.find_all('article', class_='items')
+        # for company in companies:
+        #     if company_name == company.h1.a.text:
+        #         company_data = get_company_data(company)
+        #         all_comp_data.append(company_data) 
+        #         print(f"{companies_out} will append: {company_data['公司名稱']}")
     
     time.sleep(random.randint(1,3))
-save_to_csv(fn, jobs_columns, all_job_data)
-save_to_csv(companies_out, companies_columns, all_comp_data)
+#save_to_csv(fn, jobs_columns, all_job_data)
+#save_to_csv(companies_out, companies_columns, all_comp_data)
 
-print(f"num_jobs: {len(all_job_data)}")
-print(f"num_companies: {len(all_comp_data)}")
+#print(f"num_jobs: {len(all_job_data)}")
+#print(f"num_companies: {len(all_comp_data)}")
 
 
 
