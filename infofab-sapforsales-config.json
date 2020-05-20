@@ -1,0 +1,27 @@
+{
+    "storage_name": "sapforsalesast",
+    "company_url": "https://sapforsalesast.blob.core.windows.net/sapforsales/104%E4%BA%BA%E5%8A%9B%E9%8A%80%E8%A1%8C_SAP_companies.csv",
+    "position_url": "https://sapforsalesast.blob.core.windows.net/sapforsales/104%E4%BA%BA%E5%8A%9B%E9%8A%80%E8%A1%8C_SAP_positions.csv",
+    "storage_url": "https://sapforsalesast.blob.core.windows.net/",
+    "storage_key1": "7vvamDLtmhJGE+4I1iSgmMlXA7yVjtqv9Idocpz7XquwUANKjUVMwAP0tauOUMWaFLIsvEcduD3lFzBQJrLszA==!",
+    "storage_connection_string1": "DefaultEndpointsProtocol=https;AccountName=sapforsalesast;AccountKey=7vvamDLtmhJGE+4I1iSgmMlXA7yVjtqv9Idocpz7XquwUANKjUVMwAP0tauOUMWaFLIsvEcduD3lFzBQJrLszA==;EndpointSuffix=core.windows.net",
+    "container_name": "sapforsales",
+    "jobs_columns": [
+        "職缺內容",
+        "公司名稱",
+        "地址",
+        "薪資",
+        "網址",
+        "抓取時間"
+    ],
+    "companies_columns": [
+        "公司名稱",
+        "地址",
+        "產業類別",
+        "資本額",
+        "員工人數",
+        "網址",
+        "抓取時間"
+        ]
+
+}

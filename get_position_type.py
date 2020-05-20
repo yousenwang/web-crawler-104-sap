@@ -143,6 +143,33 @@ for page in range(start_page, num_of_pages+1):
         html_source = client_response.mainFrame().toHtml()
         comp_soup = bs(html_source, 'html.parser')
         del client_response
+        job_fetch_time = str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        job_header = comp_soup.body.find('div', class_="job-header__title")
+        job_name = job_header.h1.get('title')
+        job_company = job_header.div.a.get('title')
+        job_type=[type_i.text for type_i in comp_soup.body.find_all('div', class_='trigger')]
+        job_info = [row for row in comp_soup.find_all('div', class_="col p-0 job-description-table__data")]
+        get_info = lambda row : row.find('p', class_="t3 mb-0").text.strip(" ")
+        job_data = {
+            '職缺內容': job_name,
+            '公司名稱': job_company,
+            '工作性質': get_info(job_info[2]),
+            '地址' : get_info(job_info[3]),
+            '管理責任' : get_info(job_info[4]),
+            '出差外派' : get_info(job_info[5]),
+            '工作性質' : get_info(job_info[6]),
+            '休假制度' : get_info(job_info[7]),
+            '可上班日' : get_info(job_info[8]),
+            '需求人數' : get_info(job_info[9]),
+            '職務類別1': job_type[0],
+            '職務類別2': job_type[1],
+            '職務類別3': job_type[2],
+            '抓取時間': job_fetch_time,
+            '網址': job_url
+        }
+        print(job_data)
+
+        break
         #comp_soup = bs(company_req.text, 'html.parser')
         # print(comp_soup.body.prettify())
         # company_param = {
