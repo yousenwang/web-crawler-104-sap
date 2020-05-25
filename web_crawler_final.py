@@ -30,24 +30,24 @@ companies_out = f'104人力銀行_{keyword104}_companies.csv'
 company_url = 'https://www.104.com.tw/cust/list/index?'
 companies_columns=[
     '公司名稱',
-    '地址',
-    '產業類別',
-    '資本額',
     '員工人數',
+    '地址',
+    '抓取時間',
+    '產業類別',
     '網址',
-    '抓取時間'
+    '資本額',
     ]
 
 def get_company_data(company):
     comp_dat = company.find_all('span')
     company_data = {
         '公司名稱' : company.h1.a.text,
-        '地址' : comp_dat[0].text,
-        '產業類別' : comp_dat[1].text,
-        '資本額' : comp_dat[2].text.strip('資本額：'),
         '員工人數' : comp_dat[3].text.strip('員工人數：'),
+        '地址' : comp_dat[0].text,
+        '抓取時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
+        '產業類別' : comp_dat[1].text,
         '網址' : company.h1.a.get('href'),
-        '抓取時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        '資本額' : comp_dat[2].text.strip('資本額：')
     }
     return company_data
 
@@ -80,12 +80,12 @@ def get_job_data(job):
     return job_data
 
 import os.path
-def save_to_csv(file_name, col_name, all_data):
+def save_to_csv(file_name, col_name, all_data, encoding=None):
     write_headers = True
     if os.path.isfile(file_name):
         write_headers = False
     #try:
-    with open(file_name,'a+', newline='') as csvFile:               #定義CSV的寫入檔,並且每次寫入完會換下一行
+    with open(file_name,'a+', newline='', encoding=encoding) as csvFile:               #定義CSV的寫入檔,並且每次寫入完會換下一行
         dictWriter = csv.DictWriter(csvFile, fieldnames=col_name)            #定義寫入器
         if write_headers:
             dictWriter.writeheader()
@@ -101,6 +101,7 @@ def save_to_csv(file_name, col_name, all_data):
     print(f"New rows/data are written in {file_name}.")
 all_job_data = []
 all_comp_data = []
+comp_not_found_count = 0
 for page in range(start_page, num_of_pages+1):
     print(("*" * 20) + f"page: {page}" + ("*" * 20))
     my_params['page'] = str(page)
@@ -127,18 +128,25 @@ for page in range(start_page, num_of_pages+1):
         comp_soup = bs(company_req.text, 'html.parser')
         #print(comp_soup.body.prettify())
         companies = comp_soup.body.find_all('article', class_='items')
+        comp_found = False
         for company in companies:
             if company_name == company.h1.a.text:
                 company_data = get_company_data(company)
                 all_comp_data.append(company_data) 
                 print(f"{companies_out} will append: {company_data['公司名稱']}")
+                comp_found = True
+        if not comp_found:
+            comp_not_found_count+=1
+            print(f'unable to get {company_name}\' data.')
     
     time.sleep(random.randint(1,3))
 save_to_csv(fn, jobs_columns, all_job_data)
-save_to_csv(companies_out, companies_columns, all_comp_data)
+save_to_csv(companies_out, companies_columns, all_comp_data, 'utf-8-sig')
 
 print(f"num_jobs: {len(all_job_data)}")
 print(f"num_companies: {len(all_comp_data)}")
+print(f'num companies info not found: {comp_not_found_count}')
 
-
-
+print("checking whether there is a duplciate with previous date.....")
+from _remove_duplicate_company import remove_duplicate
+remove_duplicate(source=companies_out)

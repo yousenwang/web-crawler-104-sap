@@ -1,7 +1,9 @@
 """
 Author: You Sen Wang (Ethan)
 Started Date: 04/06/2020
-Email: yousenwang@gmail.com
+Email: 
+Ethan_Wang@infofab.com
+yousenwang@gmail.com
 Please read the README.md before using it.
 """
 import sys
