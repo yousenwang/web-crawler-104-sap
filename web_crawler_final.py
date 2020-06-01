@@ -1,7 +1,9 @@
 """
 Author: You Sen Wang (Ethan)
 Started Date: 04/06/2020
-Email: yousenwang@gmail.com
+Email: 
+Ethan_Wang@infofab.com
+yousenwang@gmail.com
 Please read the README.md before using it.
 """
 
@@ -11,8 +13,8 @@ from bs4 import BeautifulSoup as bs
 import datetime
 import csv
 import random, time
-start_page = 1
-num_of_pages = 50
+start_page = 3
+num_of_pages = 3
 keyword104 = 'SAP'
 head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
         'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
@@ -24,18 +26,23 @@ my_params = {'ro':'0', # 限定全職的工作，如果不限定則輸入0
              'mode':'s',
              'kwop': '7',
              'order':'15'} 
+#fn=f'104人力銀行_{keyword104}_positions_draft.csv'  
 fn=f'104人力銀行_{keyword104}_positions.csv'  
 url = 'https://www.104.com.tw/jobs/search/?'
+# companies_out = f'104人力銀行_{keyword104}_companies_draft.csv'
 companies_out = f'104人力銀行_{keyword104}_companies.csv'
 company_url = 'https://www.104.com.tw/cust/list/index?'
 companies_columns=[
     '公司名稱',
     '員工人數',
     '地址',
-    '抓取時間',
+    '創建時間',
+    '業務',
     '產業類別',
     '網址',
     '資本額',
+    '類型',
+    '更改時間'
     ]
 
 def get_company_data(company):
@@ -44,10 +51,13 @@ def get_company_data(company):
         '公司名稱' : company.h1.a.text,
         '員工人數' : comp_dat[3].text.strip('員工人數：'),
         '地址' : comp_dat[0].text,
-        '抓取時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
+        '創建時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
+        '業務' : "",
         '產業類別' : comp_dat[1].text,
         '網址' : company.h1.a.get('href'),
-        '資本額' : comp_dat[2].text.strip('資本額：')
+        '資本額' : comp_dat[2].text.strip('資本額：'),
+        '類型': "",
+        '更改時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
     }
     return company_data
 
@@ -117,28 +127,27 @@ for page in range(start_page, num_of_pages+1):
         # Check to see if we already search the company before.
         if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data):
             print(f"{company_name} already exists, skip.")
-            continue
+        else:
+            company_param = {
+                "keyword": str(company_name),
+                'mode':'s'
+                }
+            company_req =  requests.get(company_url, company_param, headers=head)
+            comp_soup = bs(company_req.text, 'html.parser')
+            #print(comp_soup.body.prettify())
+            companies = comp_soup.body.find_all('article', class_='items')
+            comp_found = False
+            for company in companies:
+                if company_name == company.h1.a.text:
+                    company_data = get_company_data(company)
+                    all_comp_data.append(company_data) 
+                    print(f"{companies_out} will append: {company_data['公司名稱']}")
+                    comp_found = True
+            if not comp_found:
+                comp_not_found_count+=1
+                print(f'unable to get {company_name}\' data.')
         all_job_data.append(job_data)
         print(f"{fn} will append: {job_data['職缺內容']}")
-        company_param = {
-            "keyword": str(company_name),
-            'mode':'s'
-            }
-        company_req =  requests.get(company_url, company_param, headers=head)
-        comp_soup = bs(company_req.text, 'html.parser')
-        #print(comp_soup.body.prettify())
-        companies = comp_soup.body.find_all('article', class_='items')
-        comp_found = False
-        for company in companies:
-            if company_name == company.h1.a.text:
-                company_data = get_company_data(company)
-                all_comp_data.append(company_data) 
-                print(f"{companies_out} will append: {company_data['公司名稱']}")
-                comp_found = True
-        if not comp_found:
-            comp_not_found_count+=1
-            print(f'unable to get {company_name}\' data.')
-    
     time.sleep(random.randint(1,3))
 save_to_csv(fn, jobs_columns, all_job_data)
 save_to_csv(companies_out, companies_columns, all_comp_data, 'utf-8-sig')
