@@ -13,8 +13,8 @@ from bs4 import BeautifulSoup as bs
 import datetime
 import csv
 import random, time
-start_page = 3
-num_of_pages = 3
+start_page = 1
+num_of_pages = 1
 keyword104 = 'SAP'
 head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
         'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
@@ -33,31 +33,33 @@ url = 'https://www.104.com.tw/jobs/search/?'
 companies_out = f'104人力銀行_{keyword104}_companies.csv'
 company_url = 'https://www.104.com.tw/cust/list/index?'
 companies_columns=[
+    '備註',
     '公司名稱',
+    '創建時間',
     '員工人數',
     '地址',
-    '創建時間',
+    '更改時間',
     '業務',
     '產業類別',
     '網址',
     '資本額',
-    '類型',
-    '更改時間'
+    '類型'
     ]
 
 def get_company_data(company):
     comp_dat = company.find_all('span')
     company_data = {
+        '備註': "",
         '公司名稱' : company.h1.a.text,
+        '創建時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
         '員工人數' : comp_dat[3].text.strip('員工人數：'),
         '地址' : comp_dat[0].text,
-        '創建時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
+        '更改時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
         '業務' : "",
         '產業類別' : comp_dat[1].text,
         '網址' : company.h1.a.get('href'),
         '資本額' : comp_dat[2].text.strip('資本額：'),
         '類型': "",
-        '更改時間' : str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M")),
     }
     return company_data
 
@@ -96,7 +98,7 @@ def save_to_csv(file_name, col_name, all_data, encoding=None):
         write_headers = False
     #try:
     with open(file_name,'a+', newline='', encoding=encoding) as csvFile:               #定義CSV的寫入檔,並且每次寫入完會換下一行
-        dictWriter = csv.DictWriter(csvFile, fieldnames=col_name)            #定義寫入器
+        dictWriter = csv.DictWriter(csvFile, fieldnames=col_name, delimiter=",")            #定義寫入器
         if write_headers:
             dictWriter.writeheader()
             print(f"write headers to {file_name}.")   
@@ -155,7 +157,6 @@ save_to_csv(companies_out, companies_columns, all_comp_data, 'utf-8-sig')
 print(f"num_jobs: {len(all_job_data)}")
 print(f"num_companies: {len(all_comp_data)}")
 print(f'num companies info not found: {comp_not_found_count}')
-
 print("checking whether there is a duplciate with previous date.....")
 from _remove_duplicate_company import remove_duplicate
 remove_duplicate(source=companies_out)
