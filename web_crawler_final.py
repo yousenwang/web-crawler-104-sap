@@ -14,7 +14,7 @@ import datetime
 import csv
 import random, time
 start_page = 1
-num_of_pages = 1
+num_of_pages = 50
 keyword104 = 'SAP'
 head = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
         'Accept-Language':'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4'} 
@@ -131,7 +131,7 @@ for page in range(start_page, num_of_pages+1):
             print(f"{company_name} already exists, skip.")
         else:
             company_param = {
-                "keyword": str(company_name),
+                "keyword": str(company_name).translate ({ord(c): " " for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"}),
                 'mode':'s'
                 }
             company_req =  requests.get(company_url, company_param, headers=head)
