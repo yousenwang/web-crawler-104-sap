@@ -20,14 +20,14 @@ def remove_duplicate(source):
     #print (df[df['創建時間'].isnull()])
     df.loc[df['更改時間'].isnull(), '更改時間'] = df['創建時間']
     res = pd.DataFrame()
-    print(len(set(df["公司名稱"])))
+    #print(len(set(df["公司名稱"])))
     count = 0
     for company_name in set(df["公司名稱"]):
         company = df.loc[df.公司名稱 == company_name]
-        print(company.shape)
+        #print(company.shape)
         latest = max(company.創建時間)
         oldest = min(company.創建時間)
-        print(company)
+        #print(company)
         if latest.to_datetime64() != oldest.to_datetime64():
             #print(latest, oldest)
             latest_row = company[company.創建時間 == latest]
@@ -46,8 +46,8 @@ def remove_duplicate(source):
             updated_row = company1
         # use modified time since created time is already changed to the oldest time.
         # we can't use created time here anymore.
-        print("update:")
-        print(updated_row)
+        #print("update:")
+        #print(updated_row)
         res = pd.concat([res, updated_row], axis=0)
 
     print(res.shape)
