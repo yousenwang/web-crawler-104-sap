@@ -127,29 +127,55 @@ for page in range(start_page, num_of_pages+1):
         job_data = get_job_data(job)
         company_name = job_data['公司名稱']
         # Check to see if we already search the company before.
-        if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data):
+        all_job_data.append(job_data)
+        print(f"{fn} will append: {job_data['職缺內容']}")
+        if any(job_dat['公司名稱'] == company_name for job_dat in all_job_data[:-1]):
             print(f"{company_name} already exists, skip.")
         else:
             company_param = {
                 "keyword": str(company_name).translate ({ord(c): " " for c in "!@#$%^&*()[]{};:,./<>?\|`~-=_+"}),
                 'mode':'s'
                 }
-            company_req =  requests.get(company_url, company_param, headers=head)
-            comp_soup = bs(company_req.text, 'html.parser')
-            #print(comp_soup.body.prettify())
-            companies = comp_soup.body.find_all('article', class_='items')
             comp_found = False
-            for company in companies:
-                if company_name == company.h1.a.text:
-                    company_data = get_company_data(company)
-                    all_comp_data.append(company_data) 
-                    print(f"{companies_out} will append: {company_data['公司名稱']}")
-                    comp_found = True
+            def comp_help(company_name, company_param):
+                comp_found = False
+                company_req =  requests.get(company_url, company_param, headers=head)
+                comp_soup = bs(company_req.text, 'html.parser')
+                #print(comp_soup.body.prettify())
+                companies = comp_soup.body.find_all('article', class_='items')
+                for company in companies:
+                    if company_name == company.h1.a.text:
+                        company_data = get_company_data(company)
+                        all_comp_data.append(company_data) 
+                        print(f"{companies_out} will append: {company_data['公司名稱']}")
+                        comp_found = True
+                return comp_found
+            comp_found = comp_help(company_name, company_param)
+            if comp_found:
+                continue
+            else:
+                company_param["keyword"] = str(company_name)[str(company_name).rfind("_")+1:]
+                print("left")
+                print(company_param["keyword"])
+            comp_found = comp_help(company_name, company_param)
+            if comp_found:
+                continue
+            else:
+                company_param["keyword"] = str(company_name)[:str(company_name).rfind("_")]
+                print("right")
+                print(company_param["keyword"])
+            comp_found = comp_help(company_name, company_param)
+            if comp_found:
+                continue
+            else:
+                company_param["keyword"] = str(company_name)[:str(company_name).rfind("(")]
+                print("left(")
+                print(company_param["keyword"])
+            comp_found = comp_help(company_name, company_param)
             if not comp_found:
                 comp_not_found_count+=1
                 print(f'unable to get {company_name}\' data.')
-        all_job_data.append(job_data)
-        print(f"{fn} will append: {job_data['職缺內容']}")
+            
     time.sleep(random.randint(1,3))
 save_to_csv(fn, jobs_columns, all_job_data)
 save_to_csv(companies_out, companies_columns, all_comp_data, 'utf-8-sig')
