@@ -21,7 +21,6 @@ def remove_duplicate(source):
     df.loc[df['更改時間'].isnull(), '更改時間'] = df['創建時間']
     res = pd.DataFrame()
     #print(len(set(df["公司名稱"])))
-    count = 0
     for company_name in set(df["公司名稱"]):
         company = df.loc[df.公司名稱 == company_name]
         #print(company.shape)
@@ -54,4 +53,3 @@ def remove_duplicate(source):
     path = f"./{source}"
     res.to_csv(path, index=False, header=True,encoding='utf-8-sig')
     print(path)
-    print(count)
